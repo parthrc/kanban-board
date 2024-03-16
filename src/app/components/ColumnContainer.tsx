@@ -1,9 +1,9 @@
 import PlusIcon from "@/icons/PlusIcon";
 import TrashIcon from "@/icons/TrashIcon";
 import { Column, Id, Task } from "@/types";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import TaskCard from "./TaskCard";
 
 interface Props {
@@ -11,9 +11,9 @@ interface Props {
   deleteColumn: (id: Id) => void;
   updateColumn: (id: Id, title: string) => void;
   createTask: (columnId: Id) => void;
-  tasks?: Task[];
+  tasks: Task[];
   deleteTask: (taskId: Id) => void;
-  updateTask: (taskId: Id, newContent:string) => void;
+  updateTask: (taskId: Id, newContent: string) => void;
 }
 
 function ColumnContainer(props: Props) {
@@ -29,6 +29,10 @@ function ColumnContainer(props: Props) {
 
   //Title edit mode
   const [editMode, setEditMode] = useState(false);
+
+  const tasksIds: Id[] = useMemo(() => {
+    return tasks.map((task) => task.id);
+  }, [tasks]);
 
   //to make an element draggable
   const {
@@ -109,14 +113,16 @@ function ColumnContainer(props: Props) {
       </div>
       {/* Column task container */}
       <div className="flex flex-grow flex-col gap-2  overflow-y-auto overflow-x-hidden mx-1">
-        {tasks?.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            deleteTask={deleteTask}
-            updateTask={updateTask}
-          />
-        ))}
+        <SortableContext items={tasksIds}>
+          {tasks?.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              deleteTask={deleteTask}
+              updateTask={updateTask}
+            />
+          ))}
+        </SortableContext>
       </div>
       {/* Column footer */}
       <button

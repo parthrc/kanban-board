@@ -6,6 +6,7 @@ import ColumnContainer from "./ColumnContainer";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -14,6 +15,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
+import TaskCard from "./TaskCard";
 
 type Props = {};
 
@@ -56,6 +58,8 @@ const KanbanBoard = ({}: Props) => {
   // Track which column is actively being dragged
   const [activeDragCol, setActiveDragCol] = useState<Column | null>(null);
 
+  const [activeDragTask, setActiveDragTask] = useState<Task | null>(null);
+
   //start DRAG event only if user is trying to drag,
   //not jsut cliking on the delete button
   const sensors = useSensors(
@@ -74,6 +78,7 @@ const KanbanBoard = ({}: Props) => {
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         sensors={sensors}
+        onDragOver={onDragOver}
       >
         <div className="m-auto flex gap-4">
           {/* //List of columns */}
@@ -117,6 +122,13 @@ const KanbanBoard = ({}: Props) => {
                 updateTask={updateTask}
               />
             )}
+            {activeDragTask && (
+              <TaskCard
+                task={activeDragTask}
+                deleteTask={deleteTask}
+                updateTask={updateTask}
+              />
+            )}
           </DragOverlay>,
           document.body
         )}
@@ -138,6 +150,9 @@ const KanbanBoard = ({}: Props) => {
   //function to delete column
   function deleteColumn(column_id: Id) {
     const filteredColumns = columns.filter((col) => col.id !== column_id);
+    //Delete all tasks of the column
+    const updatedTasks = tasks.filter((task) => task.columnId !== column_id);
+    setTasks(updatedTasks);
 
     setColumns(filteredColumns);
   }
@@ -162,15 +177,23 @@ const KanbanBoard = ({}: Props) => {
   function onDragStart(event: DragStartEvent) {
     // console.log("DRAG START:", event);
     //check if dragged type is 'Column'
-    //set active column obly then
+    //set active column only then
     if (event.active.data.current?.type === "Column") {
       setActiveDragCol(event.active.data.current.column);
+      return;
+    }
+    //check if dragged type is 'Task'
+    //set active task only then
+    if (event.active.data.current?.type === "Task") {
+      setActiveDragTask(event.active.data.current.task);
       return;
     }
   }
 
   //onDragEnd
   function onDragEnd(event: DragEndEvent) {
+    setActiveDragCol(null);
+    setActiveDragTask(null);
     // console.log("DRAG END:", event);
     //we get the active and over objects from the event object
     const { active, over } = event;
@@ -198,6 +221,49 @@ const KanbanBoard = ({}: Props) => {
       //arrayMove is dnd-kit function which is used to swap places of two elements in an array
       return arrayMove(columns, activeColumnIndex, OverColumnIndex);
     });
+  }
+
+  //onDragOver
+  function onDragOver(event: DragOverEvent) {
+    // console.log("DRAG END:", event);
+    //we get the active and over objects from the event object
+    const { active, over } = event;
+    //if currently dragged element is not over any other element, we return
+    if (!over) return;
+
+    // id of the current dragged element
+    const activeId = active.id;
+    //id of the element OVER which currently dragged element is hovering
+    const overId = over.id;
+
+    //it means currently dragged element is on the same position
+    if (activeId === overId) return;
+
+    //Check if current type is "Task"
+    const isActiveATask = active.data.current?.type === "Task";
+    const isOverATask = over.data.current?.type === "Task";
+
+    if (!isActiveATask) return;
+
+    // Dropping task over another task
+    if (isActiveATask && isOverATask) {
+      const activeIndex = tasks.findIndex((task) => task.id === activeId);
+      const overIndex = tasks.findIndex((task) => task.id === overId);
+
+      tasks[activeIndex].columnId = tasks[overIndex].columnId;
+
+      setTasks((tasks) => arrayMove(tasks, activeIndex, overIndex));
+    }
+    // Dropping task over another column
+    const isOverAColumn = over.data.current?.type === "Column";
+
+    if (isActiveATask && isOverAColumn) {
+      const activeIndex = tasks.findIndex((task) => task.id === activeId);
+
+      tasks[activeIndex].columnId = overId;
+
+      setTasks((tasks) => arrayMove(tasks, activeIndex, activeIndex));
+    }
   }
 
   //create new task
