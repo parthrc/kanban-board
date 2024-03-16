@@ -21,3 +21,7 @@ body,
 ::-webkit-scrollbar-thumb {
   @apply bg-rose-600 rounded-xl;
 }
+
+.task > ::-webkit-scrollbar-thumb {
+  @apply bg-blue-600;
+}

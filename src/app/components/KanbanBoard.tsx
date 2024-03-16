@@ -88,6 +88,7 @@ const KanbanBoard = ({}: Props) => {
                   createTask={createTask}
                   tasks={tasks.filter((task) => task.columnId === col.id)}
                   deleteTask={deleteTask}
+                  updateTask={updateTask}
                 />
               ))}
             </SortableContext>
@@ -110,7 +111,10 @@ const KanbanBoard = ({}: Props) => {
                 column={activeDragCol}
                 createTask={createTask}
                 deleteTask={deleteTask}
-                tasks={tasks.filter((task) => task.columnId === activeDragCol.id)}
+                tasks={tasks.filter(
+                  (task) => task.columnId === activeDragCol.id
+                )}
+                updateTask={updateTask}
               />
             )}
           </DragOverlay>,
@@ -212,6 +216,16 @@ const KanbanBoard = ({}: Props) => {
     const updatedTasks = tasks.filter((task) => task.id !== taskId);
 
     setTasks(updatedTasks);
+  }
+
+  //update task
+  function updateTask(taskId: Id, newContent: string) {
+    const updatedTask = tasks.map((task) => {
+      if (task.id !== taskId) return task;
+      return { ...task, content: newContent };
+    });
+
+    setTasks(updatedTask);
   }
 };
 

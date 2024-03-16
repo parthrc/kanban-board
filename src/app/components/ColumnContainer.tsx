@@ -13,11 +13,19 @@ interface Props {
   createTask: (columnId: Id) => void;
   tasks?: Task[];
   deleteTask: (taskId: Id) => void;
+  updateTask: (taskId: Id, newContent:string) => void;
 }
 
 function ColumnContainer(props: Props) {
-  const { column, deleteColumn, updateColumn, createTask, tasks, deleteTask } =
-    props;
+  const {
+    column,
+    deleteColumn,
+    updateColumn,
+    createTask,
+    tasks,
+    deleteTask,
+    updateTask,
+  } = props;
 
   //Title edit mode
   const [editMode, setEditMode] = useState(false);
@@ -100,9 +108,14 @@ function ColumnContainer(props: Props) {
         </button>
       </div>
       {/* Column task container */}
-      <div className="flex flex-grow flex-col gap-2 overflow-x-auto mx-1">
+      <div className="flex flex-grow flex-col gap-2  overflow-y-auto overflow-x-hidden mx-1">
         {tasks?.map((task) => (
-          <TaskCard key={task.id} task={task} deleteTask={deleteTask} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            deleteTask={deleteTask}
+            updateTask={updateTask}
+          />
         ))}
       </div>
       {/* Column footer */}
