@@ -1,6 +1,6 @@
 "use client";
 import PlusIcon from "@/icons/PlusIcon";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Column, Id, Task } from "@/types";
 import ColumnContainer from "./ColumnContainer";
 import {
@@ -16,12 +16,13 @@ import {
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 import TaskCard from "./TaskCard";
+import ClientPortal from "./ClientPortal";
 
 type Props = {};
 
 const KanbanBoard = ({}: Props) => {
   const [columns, setColumns] = useState<Column[]>([
-    { id: 111, title: "Test column" },
+    { id: 111, title: "Test column 1" },
     {
       id: 222,
       title: "Second column",
@@ -38,7 +39,7 @@ const KanbanBoard = ({}: Props) => {
     {
       id: 2,
       columnId: 222,
-      content: "Wassup",
+      content: "Task 2",
     },
     {
       id: 3,
@@ -107,7 +108,7 @@ const KanbanBoard = ({}: Props) => {
             Add column
           </button>
         </div>
-        {createPortal(
+        {/* {createPortal(
           <DragOverlay>
             {activeDragCol && (
               <ColumnContainer
@@ -130,8 +131,35 @@ const KanbanBoard = ({}: Props) => {
               />
             )}
           </DragOverlay>,
-          document.body
-        )}
+          docBody
+        )} */}
+
+        {
+          <ClientPortal show={true}>
+            <DragOverlay>
+              {activeDragCol && (
+                <ColumnContainer
+                  deleteColumn={deleteColumn}
+                  updateColumn={updateColumn}
+                  column={activeDragCol}
+                  createTask={createTask}
+                  deleteTask={deleteTask}
+                  tasks={tasks.filter(
+                    (task) => task.columnId === activeDragCol.id
+                  )}
+                  updateTask={updateTask}
+                />
+              )}
+              {activeDragTask && (
+                <TaskCard
+                  task={activeDragTask}
+                  deleteTask={deleteTask}
+                  updateTask={updateTask}
+                />
+              )}
+            </DragOverlay>
+          </ClientPortal>
+        }
       </DndContext>
     </div>
   );
@@ -240,7 +268,7 @@ const KanbanBoard = ({}: Props) => {
 
     //Id of active Task
     const activeId = active.id;
-//Id fo active Over
+    //Id fo active Over
     const overId = over.id;
 
     //Case 2: let go on same spot
