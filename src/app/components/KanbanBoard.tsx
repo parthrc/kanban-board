@@ -55,9 +55,9 @@ const KanbanBoard = ({}: Props) => {
   //Calculate number of columns
   const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-  // Track which column is actively being dragged
+  //Track currently dragged column
   const [activeDragCol, setActiveDragCol] = useState<Column | null>(null);
-
+  //Track current colum OVER which dragged column resides
   const [activeDragTask, setActiveDragTask] = useState<Task | null>(null);
 
   //start DRAG event only if user is trying to drag,
@@ -191,24 +191,30 @@ const KanbanBoard = ({}: Props) => {
   }
 
   //onDragEnd
+  //this fires when we drag and leave an element
+  // now there are three cases
+  //if the dragged element was let go on NO other element
+  //if dragged element was let go on the same element
+  //if dragged element was let go on another element
   function onDragEnd(event: DragEndEvent) {
     setActiveDragCol(null);
     setActiveDragTask(null);
     // console.log("DRAG END:", event);
-    //we get the active and over objects from the event object
+    //We get info of the active and over objects from the event
     const { active, over } = event;
-    //if currently dragged element is not over any other element, we return
+    // Case 1: let go, not on any other element
     if (!over) return;
 
-    // id of the current dragged element
+    //ID of the active column
     const activeColumnId = active.id;
-    //id of the element OVER which currently dragged element is hovering
+    //ID of the over column
     const overColumnId = over.id;
 
-    //it means currently dragged element is on the same position
+    // Case 2: let go on the same spot
     if (activeColumnId === overColumnId) return;
 
-    //update columns by moving places
+    // Case 3: let on other spot
+    //Swap places in our columns state of the columns
     setColumns((columns) => {
       //find index of currently dragged element in our STATE columns
       const activeColumnIndex = columns.findIndex(
@@ -223,20 +229,21 @@ const KanbanBoard = ({}: Props) => {
     });
   }
 
-  //onDragOver
+  //We use onDragOver when we want drag items which itself are inside a draggable component
+  //In this case since Task is inside the draggable Column
   function onDragOver(event: DragOverEvent) {
     // console.log("DRAG END:", event);
     //we get the active and over objects from the event object
     const { active, over } = event;
-    //if currently dragged element is not over any other element, we return
+    //Case 1: if not on any other element
     if (!over) return;
 
-    // id of the current dragged element
+    //Id of active Task
     const activeId = active.id;
-    //id of the element OVER which currently dragged element is hovering
+//Id fo active Over
     const overId = over.id;
 
-    //it means currently dragged element is on the same position
+    //Case 2: let go on same spot
     if (activeId === overId) return;
 
     //Check if current type is "Task"
@@ -245,7 +252,7 @@ const KanbanBoard = ({}: Props) => {
 
     if (!isActiveATask) return;
 
-    // Dropping task over another task
+    //Case 3-A: if let go on other task
     if (isActiveATask && isOverATask) {
       const activeIndex = tasks.findIndex((task) => task.id === activeId);
       const overIndex = tasks.findIndex((task) => task.id === overId);
@@ -254,7 +261,7 @@ const KanbanBoard = ({}: Props) => {
 
       setTasks((tasks) => arrayMove(tasks, activeIndex, overIndex));
     }
-    // Dropping task over another column
+    //Case 3-B: if let go on other task on another column
     const isOverAColumn = over.data.current?.type === "Column";
 
     if (isActiveATask && isOverAColumn) {
